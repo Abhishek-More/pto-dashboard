@@ -253,24 +253,39 @@ function render() {
     `<span class="legend-item"><span class="legend-dot" style="background:${TC[t]}"></span>${t}</span>`
   ).join('');
 
-  // Person chart (colored by team, with projection overlay)
+  // Person chart (red-green gradient by days taken, with projection overlay)
   if (personChart) personChart.destroy();
   const hasProjection = d.persons.some(p => p.projected > p.days);
+
+  function daysColor(days) {
+    // green (<10) -> orange (15) -> red (20+)
+    if (days <= 10) {
+      const t = days / 10;
+      const r = Math.round(34 + t * (240 - 34));
+      const g = Math.round(139 + t * (136 - 139));
+      const b = Math.round(34 + t * (54 - 34));
+      return `rgb(${r},${g},${b})`;
+    } else {
+      const t = Math.min((days - 10) / 10, 1);
+      const r = Math.round(240 + t * (218 - 240));
+      const g = Math.round(136 - t * (100));
+      const b = Math.round(54 - t * (20));
+      return `rgb(${r},${g},${b})`;
+    }
+  }
+
   const personDatasets = [{
     label: 'Taken',
     data: d.persons.map(p => p.days),
-    backgroundColor: d.persons.map(p => TC[p.team] || '#58a6ff'),
+    backgroundColor: d.persons.map(p => daysColor(p.days)),
     borderRadius: 4,
   }];
   if (hasProjection) {
     personDatasets.push({
       label: 'Projected',
       data: d.persons.map(p => Math.max(0, p.projected - p.days)),
-      backgroundColor: d.persons.map(p => {
-        const c = TC[p.team] || '#58a6ff';
-        return c + '33';
-      }),
-      borderColor: d.persons.map(p => TC[p.team] || '#58a6ff'),
+      backgroundColor: d.persons.map(p => daysColor(p.projected).replace('rgb(', 'rgba(').replace(')', ',0.2)')),
+      borderColor: d.persons.map(p => daysColor(p.projected)),
       borderWidth: 1,
       borderDash: [4, 4],
       borderRadius: 4,
@@ -292,7 +307,7 @@ function render() {
             label: (ctx) => {
               const p = d.persons[ctx.dataIndex];
               if (ctx.datasetIndex === 1) return `Projected total: ${p.projected}d`;
-              return `${p.team}: ${p.days}d`;
+              return `${p.days}d (${p.team})`;
             }
           }
         }
