@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PTO Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f1117;
+    color: #e1e4e8;
+    padding: 2rem;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 0.25rem;
+    font-size: 1.8rem;
+    color: #fff;
+  }
+  .subtitle {
+    text-align: center;
+    color: #8b949e;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+  .card.wide {
+    grid-column: 1 / -1;
+  }
+  .card h2 {
+    font-size: 1rem;
+    color: #8b949e;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .chart-container {
+    position: relative;
+    width: 100%;
+  }
+  .chart-container.tall {
+    height: 500px;
+  }
+  .chart-container.medium {
+    height: 350px;
+  }
+  .heatmap-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+  }
+  .heatmap-table th {
+    padding: 4px 6px;
+    color: #8b949e;
+    font-weight: 500;
+    text-align: center;
+  }
+  .heatmap-table td {
+    padding: 4px 6px;
+    text-align: center;
+    border-radius: 4px;
+  }
+  .heatmap-table td.name-col {
+    text-align: left;
+    color: #c9d1d9;
+    white-space: nowrap;
+  }
+  .stat-row {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .stat {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    text-align: center;
+    min-width: 160px;
+  }
+  .stat .value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #58a6ff;
+  }
+  .stat .label {
+    font-size: 0.8rem;
+    color: #8b949e;
+    margin-top: 0.25rem;
+  }
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr; }
+    body { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>PTO Dashboard</h1>
+<p class="subtitle">Anonymous team PTO analysis / Generated June 05, 2026</p>
+
+<div class="stat-row">
+  <div class="stat">
+    <div class="value">58</div>
+    <div class="label">Team Members</div>
+  </div>
+  <div class="stat">
+    <div class="value">736</div>
+    <div class="label">PTO Events</div>
+  </div>
+  <div class="stat">
+    <div class="value">1284</div>
+    <div class="label">Total Days Taken</div>
+  </div>
+  <div class="stat">
+    <div class="value">22.1</div>
+    <div class="label">Avg Days / Person</div>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- 2026 Projection -->
+  <div class="card wide">
+    <h2>2026 Projected vs Taken (days)</h2>
+    <div class="chart-container tall">
+      <canvas id="projectionChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Monthly team total -->
+  <div class="card wide">
+    <h2>Monthly Team PTO (days)</h2>
+    <div class="chart-container medium">
+      <canvas id="monthlyChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Day of week -->
+  <div class="card">
+    <h2>Day of Week Distribution</h2>
+    <div class="chart-container medium">
+      <canvas id="dowChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Block length -->
+  <div class="card">
+    <h2>PTO Block Length</h2>
+    <div class="chart-container medium">
+      <canvas id="blockChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Per-person by year -->
+  <div class="card wide">
+    <h2>PTO by Person and Year (days)</h2>
+    <div class="chart-container tall">
+      <canvas id="personYearChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Heatmap -->
+  <div class="card wide">
+    <h2>2026 Monthly Heatmap (days per person)</h2>
+    <div id="heatmapContainer" style="overflow-x: auto;"></div>
+  </div>
+
+</div>
+
+<script>
+const DATA = {"personYear": [{"name": "Person 3", "2025": 2.4, "2026": 29.4}, {"name": "Person 54", "2025": 4.4, "2026": 25.0}, {"name": "Person 49", "2025": 11.8, "2026": 18.2}, {"name": "Person 14", "2024": 10.8, "2025": 17.4, "2026": 18.0}, {"name": "Person 15", "2025": 0.5, "2026": 16.0}, {"name": "Person 27", "2024": 8.8, "2025": 27.0, "2026": 15.0}, {"name": "Person 26", "2024": 2.1, "2025": 34.2, "2026": 10.2}, {"name": "Person 9", "2025": 13.1, "2026": 9.9}, {"name": "Person 11", "2026": 9.4}, {"name": "Person 36", "2025": 9.0, "2026": 9.2}, {"name": "Person 13", "2024": 8.0, "2025": 22.5, "2026": 9.0}, {"name": "Person 19", "2024": 1.0, "2025": 20.0, "2026": 8.0}, {"name": "Person 46", "2025": 8.1, "2026": 7.4}, {"name": "Person 4", "2025": 11.0, "2026": 7.3}, {"name": "Person 55", "2025": 22.4, "2026": 6.6}, {"name": "Person 57", "2025": 26.4, "2026": 6.3}, {"name": "Person 40", "2024": 12.4, "2025": 27.2, "2026": 6.0}, {"name": "Person 5", "2024": 8.0, "2025": 28.1, "2026": 5.0}, {"name": "Person 29", "2024": 2.0, "2025": 20.5, "2026": 5.0}, {"name": "Person 45", "2024": 0.2, "2025": 24.0, "2026": 5.0}, {"name": "Person 52", "2025": 3.1, "2026": 5.0}, {"name": "Person 58", "2024": 5.8, "2025": 25.5, "2026": 5.0}, {"name": "Person 31", "2024": 9.6, "2025": 22.4, "2026": 4.6}, {"name": "Person 17", "2024": 4.0, "2025": 24.0, "2026": 4.0}, {"name": "Person 23", "2026": 4.0}, {"name": "Person 33", "2024": 8.0, "2025": 24.2, "2026": 4.0}, {"name": "Person 56", "2024": 3.0, "2025": 27.0, "2026": 4.0}, {"name": "Person 18", "2024": 4.6, "2025": 17.5, "2026": 3.9}, {"name": "Person 6", "2026": 2.9}, {"name": "Person 12", "2024": 8.6, "2025": 25.5, "2026": 2.2}, {"name": "Person 35", "2025": 14.0, "2026": 2.2}, {"name": "Person 32", "2024": 7.5, "2025": 23.0, "2026": 2.0}, {"name": "Person 34", "2025": 7.0, "2026": 2.0}, {"name": "Person 38", "2026": 2.0}, {"name": "Person 2", "2026": 0.1}, {"name": "Person 1", "2024": 5.8, "2025": 3.0}, {"name": "Person 7", "2024": 3.0, "2025": 16.0}, {"name": "Person 8", "2024": 3.0, "2025": 8.4}, {"name": "Person 10", "2024": 0.2, "2025": 10.8}, {"name": "Person 16", "2024": 0.6, "2025": 10.0}, {"name": "Person 20", "2025": 8.0}, {"name": "Person 21", "2024": 0.2}, {"name": "Person 22", "2024": 12.2, "2025": 1.0}, {"name": "Person 24", "2024": 6.5}, {"name": "Person 25", "2025": 8.0}, {"name": "Person 28", "2024": 15.4, "2025": 41.6}, {"name": "Person 30", "2024": 5.0, "2025": 27.0}, {"name": "Person 37", "2024": 15.5, "2025": 7.0}, {"name": "Person 39", "2025": 7.0}, {"name": "Person 41", "2024": 8.3, "2025": 20.2}, {"name": "Person 42", "2024": 0.2}, {"name": "Person 43", "2024": 18.0}, {"name": "Person 44", "2024": 7.5}, {"name": "Person 47", "2024": 24.3, "2025": 6.0}, {"name": "Person 48", "2024": 15.2, "2025": 10.2}, {"name": "Person 50", "2024": 3.0, "2025": 19.0}, {"name": "Person 51", "2024": 7.2, "2025": 4.4}, {"name": "Person 53", "2025": 3.5}], "monthly": [{"month": "2025-01", "days": 49.2}, {"month": "2025-02", "days": 32.8}, {"month": "2025-03", "days": 80.1}, {"month": "2025-04", "days": 64.1}, {"month": "2025-05", "days": 77.0}, {"month": "2025-06", "days": 68.0}, {"month": "2025-07", "days": 81.3}, {"month": "2025-08", "days": 67.1}, {"month": "2025-09", "days": 55.0}, {"month": "2025-10", "days": 62.4}, {"month": "2025-11", "days": 48.2}, {"month": "2025-12", "days": 55.6}, {"month": "2026-01", "days": 51.1}, {"month": "2026-02", "days": 38.1}, {"month": "2026-03", "days": 51.1}, {"month": "2026-04", "days": 55.8}, {"month": "2026-05", "days": 48.0}, {"month": "2026-06", "days": 10.0}, {"month": "2026-07", "days": 14.0}, {"month": "2026-08", "days": 3.6}, {"month": "2026-09", "days": 5.4}, {"month": "2026-10", "days": 10.0}], "dayOfWeek": [{"day": "Mon", "days": 259.7}, {"day": "Tue", "days": 200.4}, {"day": "Wed", "days": 191.2}, {"day": "Thu", "days": 245.0}, {"day": "Fri", "days": 387.5}], "blockLength": [{"bucket": "Half day", "count": 169}, {"bucket": "1 day", "count": 325}, {"bucket": "2-3 days", "count": 150}, {"bucket": "4-5 days", "count": 54}, {"bucket": "1-2 weeks", "count": 32}, {"bucket": "2+ weeks", "count": 6}], "projection": [{"name": "Person 14", "taken": 18.0, "projected": 41.9, "prev_year": 17.4}, {"name": "Person 49", "taken": 18.2, "projected": 38.6, "prev_year": 11.8}, {"name": "Person 15", "taken": 16.0, "projected": 37.3, "prev_year": 0.5}, {"name": "Person 3", "taken": 29.4, "projected": 36.2, "prev_year": 2.4}, {"name": "Person 27", "taken": 15.0, "projected": 35.0, "prev_year": 27.0}, {"name": "Person 54", "taken": 25.0, "projected": 30.1, "prev_year": 4.4}, {"name": "Person 26", "taken": 10.2, "projected": 23.9, "prev_year": 34.2}, {"name": "Person 9", "taken": 9.9, "projected": 21.8, "prev_year": 13.1}, {"name": "Person 11", "taken": 9.4, "projected": 21.8, "prev_year": 0.0}, {"name": "Person 36", "taken": 9.2, "projected": 21.4, "prev_year": 9.0}, {"name": "Person 13", "taken": 9.0, "projected": 21.0, "prev_year": 22.5}, {"name": "Person 19", "taken": 8.0, "projected": 18.6, "prev_year": 20.0}, {"name": "Person 46", "taken": 7.4, "projected": 17.2, "prev_year": 8.1}, {"name": "Person 4", "taken": 7.3, "projected": 17.0, "prev_year": 11.0}, {"name": "Person 55", "taken": 6.6, "projected": 15.4, "prev_year": 22.4}, {"name": "Person 57", "taken": 6.3, "projected": 14.7, "prev_year": 26.4}, {"name": "Person 40", "taken": 6.0, "projected": 14.0, "prev_year": 27.2}, {"name": "Person 5", "taken": 5.0, "projected": 11.7, "prev_year": 28.1}, {"name": "Person 29", "taken": 5.0, "projected": 11.7, "prev_year": 20.5}, {"name": "Person 45", "taken": 5.0, "projected": 11.7, "prev_year": 24.0}, {"name": "Person 52", "taken": 5.0, "projected": 11.7, "prev_year": 3.1}, {"name": "Person 31", "taken": 4.6, "projected": 10.6, "prev_year": 22.4}, {"name": "Person 58", "taken": 5.0, "projected": 10.0, "prev_year": 25.5}, {"name": "Person 17", "taken": 4.0, "projected": 9.3, "prev_year": 24.0}, {"name": "Person 23", "taken": 4.0, "projected": 9.3, "prev_year": 0.0}, {"name": "Person 33", "taken": 4.0, "projected": 9.3, "prev_year": 24.2}, {"name": "Person 56", "taken": 4.0, "projected": 9.3, "prev_year": 27.0}, {"name": "Person 18", "taken": 3.9, "projected": 9.0, "prev_year": 17.5}, {"name": "Person 6", "taken": 2.9, "projected": 6.7, "prev_year": 0.0}, {"name": "Person 35", "taken": 2.2, "projected": 5.2, "prev_year": 14.0}, {"name": "Person 12", "taken": 2.2, "projected": 5.1, "prev_year": 25.5}, {"name": "Person 32", "taken": 2.0, "projected": 4.7, "prev_year": 23.0}, {"name": "Person 34", "taken": 2.0, "projected": 4.7, "prev_year": 7.0}, {"name": "Person 38", "taken": 2.0, "projected": 4.7, "prev_year": 0.0}, {"name": "Person 2", "taken": 0.1, "projected": 0.3, "prev_year": 0.0}], "heatmap": [{"name": "Person 3", "months": {"2026-01": 0.0, "2026-02": 0.0, "2026-03": 0.4, "2026-04": 6.0, "2026-05": 5.0, "2026-06": 0.0, "2026-07": 8.0, "2026-08": 3.6, "2026-09": 5.4, "2026-10": 1.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 54", "months": {"2026-01": 0.0, "2026-02": 0.0, "2026-03": 0.0, "2026-04": 6.0, "2026-05": 6.0, "2026-06": 0.0, "2026-07": 4.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 9.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 49", "months": {"2026-01": 3.5, "2026-02": 3.2, "2026-03": 4.0, "2026-04": 5.0, "2026-05": 3.0, "2026-06": 1.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 14", "months": {"2026-01": 2.0, "2026-02": 2.0, "2026-03": 2.0, "2026-04": 7.0, "2026-05": 5.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 15", "months": {"2026-01": 0.0, "2026-02": 0.0, "2026-03": 2.0, "2026-04": 11.0, "2026-05": 3.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 27", "months": {"2026-01": 2.0, "2026-02": 4.0, "2026-03": 5.0, "2026-04": 4.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 9", "months": {"2026-01": 1.6, "2026-02": 0.4, "2026-03": 5.5, "2026-04": 0.0, "2026-05": 1.0, "2026-06": 3.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 58", "months": {"2026-01": 6.3, "2026-02": 0.0, "2026-03": 0.0, "2026-04": 0.0, "2026-05": 0.0, "2026-06": 3.0, "2026-07": 2.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 26", "months": {"2026-01": 1.2, "2026-02": 3.0, "2026-03": 1.0, "2026-04": 0.0, "2026-05": 5.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 11", "months": {"2026-01": 3.2, "2026-02": 0.0, "2026-03": 1.1, "2026-04": 0.0, "2026-05": 4.0, "2026-06": 1.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 36", "months": {"2026-01": 2.0, "2026-02": 1.2, "2026-03": 0.0, "2026-04": 1.0, "2026-05": 4.0, "2026-06": 1.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 13", "months": {"2026-01": 5.0, "2026-02": 1.0, "2026-03": 2.0, "2026-04": 1.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 46", "months": {"2026-01": 1.9, "2026-02": 2.0, "2026-03": 4.0, "2026-04": 1.1, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 19", "months": {"2026-01": 0.0, "2026-02": 0.0, "2026-03": 3.0, "2026-04": 3.0, "2026-05": 2.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 4", "months": {"2026-01": 2.3, "2026-02": 2.0, "2026-03": 1.0, "2026-04": 1.0, "2026-05": 1.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 55", "months": {"2026-01": 0.0, "2026-02": 2.4, "2026-03": 1.0, "2026-04": 0.2, "2026-05": 3.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 56", "months": {"2026-01": 4.3, "2026-02": 0.0, "2026-03": 1.0, "2026-04": 1.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 57", "months": {"2026-01": 0.2, "2026-02": 1.0, "2026-03": 0.1, "2026-04": 4.0, "2026-05": 1.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 40", "months": {"2026-01": 6.0, "2026-02": 0.0, "2026-03": 0.0, "2026-04": 0.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 5", "months": {"2026-01": 0.0, "2026-02": 0.0, "2026-03": 5.0, "2026-04": 0.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 29", "months": {"2026-01": 0.0, "2026-02": 2.0, "2026-03": 3.0, "2026-04": 0.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 45", "months": {"2026-01": 0.0, "2026-02": 0.0, "2026-03": 5.0, "2026-04": 0.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 52", "months": {"2026-01": 1.0, "2026-02": 4.0, "2026-03": 0.0, "2026-04": 0.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 31", "months": {"2026-01": 1.6, "2026-02": 0.0, "2026-03": 3.0, "2026-04": 0.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 17", "months": {"2026-01": 0.0, "2026-02": 1.0, "2026-03": 0.0, "2026-04": 0.0, "2026-05": 2.0, "2026-06": 1.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 23", "months": {"2026-01": 1.0, "2026-02": 3.0, "2026-03": 0.0, "2026-04": 0.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 33", "months": {"2026-01": 4.0, "2026-02": 0.0, "2026-03": 0.0, "2026-04": 0.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 18", "months": {"2026-01": 0.5, "2026-02": 1.4, "2026-03": 0.0, "2026-04": 2.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 6", "months": {"2026-01": 0.2, "2026-02": 0.2, "2026-03": 0.0, "2026-04": 1.4, "2026-05": 1.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 12", "months": {"2026-01": 0.0, "2026-02": 2.2, "2026-03": 0.0, "2026-04": 0.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 35", "months": {"2026-01": 1.2, "2026-02": 0.0, "2026-03": 0.0, "2026-04": 1.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 32", "months": {"2026-01": 0.0, "2026-02": 2.0, "2026-03": 0.0, "2026-04": 0.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 34", "months": {"2026-01": 0.0, "2026-02": 0.0, "2026-03": 2.0, "2026-04": 0.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 38", "months": {"2026-01": 0.0, "2026-02": 0.0, "2026-03": 0.0, "2026-04": 0.0, "2026-05": 2.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}, {"name": "Person 2", "months": {"2026-01": 0.0, "2026-02": 0.1, "2026-03": 0.0, "2026-04": 0.0, "2026-05": 0.0, "2026-06": 0.0, "2026-07": 0.0, "2026-08": 0.0, "2026-09": 0.0, "2026-10": 0.0, "2026-11": 0.0, "2026-12": 0.0}}], "months2026": ["2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10", "2026-11", "2026-12"], "generatedAt": "2026-06-05", "totalBizDays2026": 261};
+
+Chart.defaults.color = '#8b949e';
+Chart.defaults.borderColor = '#30363d';
+
+// --- Projection chart ---
+new Chart(document.getElementById('projectionChart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.projection.map(d => d.name),
+    datasets: [
+      {
+        label: 'Taken (2026)',
+        data: DATA.projection.map(d => d.taken),
+        backgroundColor: '#238636',
+        borderRadius: 4,
+      },
+      {
+        label: 'Projected Full Year',
+        data: DATA.projection.map(d => Math.max(0, d.projected - d.taken)),
+        backgroundColor: 'rgba(35, 134, 54, 0.25)',
+        borderColor: '#238636',
+        borderWidth: 1,
+        borderDash: [4, 4],
+        borderRadius: 4,
+      },
+      {
+        label: '2025 Actual',
+        data: DATA.projection.map(d => d.prev_year),
+        backgroundColor: 'rgba(88, 166, 255, 0.5)',
+        borderRadius: 4,
+      },
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            if (ctx.datasetIndex === 1) {
+              const total = DATA.projection[ctx.dataIndex].projected;
+              return `Projected total: ${total}d`;
+            }
+            return `${ctx.dataset.label}: ${ctx.raw}d`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: { stacked: true, grid: { display: false } },
+      y: { stacked: false, title: { display: true, text: 'Days' } }
+    }
+  }
+});
+
+// --- Monthly chart ---
+const monthLabels = DATA.monthly.map(d => {
+  const [y, m] = d.month.split('-');
+  return new Date(y, m-1).toLocaleDateString('en', { month: 'short', year: '2-digit' });
+});
+new Chart(document.getElementById('monthlyChart'), {
+  type: 'bar',
+  data: {
+    labels: monthLabels,
+    datasets: [{
+      label: 'Team PTO Days',
+      data: DATA.monthly.map(d => d.days),
+      backgroundColor: DATA.monthly.map(d =>
+        d.month.startsWith('2026') ? '#58a6ff' : 'rgba(88,166,255,0.4)'
+      ),
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { title: { display: true, text: 'Days' } }
+    }
+  }
+});
+
+// --- Day of week ---
+new Chart(document.getElementById('dowChart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.dayOfWeek.map(d => d.day),
+    datasets: [{
+      label: 'Days',
+      data: DATA.dayOfWeek.map(d => d.days),
+      backgroundColor: ['#f0883e', '#f0883e', '#f0883e', '#f0883e', '#f0883e'],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { title: { display: true, text: 'Total Days' } }
+    }
+  }
+});
+
+// --- Block length ---
+new Chart(document.getElementById('blockChart'), {
+  type: 'doughnut',
+  data: {
+    labels: DATA.blockLength.map(d => d.bucket),
+    datasets: [{
+      data: DATA.blockLength.map(d => d.count),
+      backgroundColor: ['#8b949e','#58a6ff','#238636','#f0883e','#bc8cff','#f778ba'],
+      borderWidth: 0,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'right' }
+    }
+  }
+});
+
+// --- Person x Year ---
+const years = [...new Set(DATA.personYear.flatMap(d => Object.keys(d).filter(k => k !== 'name')))].sort();
+const yearColors = { '2024': 'rgba(139,148,158,0.5)', '2025': 'rgba(88,166,255,0.6)', '2026': '#238636' };
+new Chart(document.getElementById('personYearChart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.personYear.map(d => d.name),
+    datasets: years.map(y => ({
+      label: y,
+      data: DATA.personYear.map(d => d[y] || 0),
+      backgroundColor: yearColors[y] || '#58a6ff',
+      borderRadius: 3,
+    }))
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: { grid: { display: false } },
+      y: { title: { display: true, text: 'Days' } }
+    }
+  }
+});
+
+// --- Heatmap table ---
+const container = document.getElementById('heatmapContainer');
+const moLabels = DATA.months2026.map(m => {
+  const [y, mo] = m.split('-');
+  return new Date(y, mo-1).toLocaleDateString('en', { month: 'short' });
+});
+
+let html = '<table class="heatmap-table"><thead><tr><th></th>';
+moLabels.forEach(m => html += `<th>${m}</th>`);
+html += '<th>Total</th></tr></thead><tbody>';
+
+DATA.heatmap.forEach(row => {
+  html += `<tr><td class="name-col">${row.name}</td>`;
+  let total = 0;
+  DATA.months2026.forEach(m => {
+    const v = row.months[m] || 0;
+    total += v;
+    const intensity = Math.min(v / 5, 1);
+    const bg = v > 0
+      ? `rgba(88, 166, 255, ${0.15 + intensity * 0.7})`
+      : 'transparent';
+    html += `<td style="background:${bg};color:${v > 0 ? '#fff' : '#30363d'}">${v > 0 ? v.toFixed(1) : ''}</td>`;
+  });
+  html += `<td style="font-weight:600;color:#58a6ff">${total.toFixed(1)}</td>`;
+  html += '</tr>';
+});
+
+html += '</tbody></table>';
+container.innerHTML = html;
+</script>
+
+</body>
+</html>
