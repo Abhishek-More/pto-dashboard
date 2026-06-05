@@ -258,18 +258,18 @@ function render() {
   const hasProjection = d.persons.some(p => p.projected > p.days);
 
   function daysColor(days) {
-    // green (<10) -> orange (15) -> red (20+)
+    // bright green (<10) -> vivid orange (15) -> bold red (20+)
     if (days <= 10) {
       const t = days / 10;
-      const r = Math.round(34 + t * (240 - 34));
-      const g = Math.round(139 + t * (136 - 139));
-      const b = Math.round(34 + t * (54 - 34));
+      const r = Math.round(46 + t * (255 - 46));
+      const g = Math.round(204 + t * (165 - 204));
+      const b = Math.round(64 + t * (0 - 64));
       return `rgb(${r},${g},${b})`;
     } else {
       const t = Math.min((days - 10) / 10, 1);
-      const r = Math.round(240 + t * (218 - 240));
-      const g = Math.round(136 - t * (100));
-      const b = Math.round(54 - t * (20));
+      const r = Math.round(255 - t * (20));
+      const g = Math.round(165 - t * (130));
+      const b = Math.round(0 + t * (30));
       return `rgb(${r},${g},${b})`;
     }
   }
