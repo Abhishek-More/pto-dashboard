@@ -191,7 +191,12 @@
   </div>
 
   <div class="card wide">
-    <h2>PTO by Team (avg days / person)</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+      <h2 id="teamChartTitle" style="margin-bottom:0">PTO by Team (avg days / person)</h2>
+      <label class="toggle-label">
+        <input type="checkbox" id="teamTotalToggle"> Show total
+      </label>
+    </div>
     <div class="chart-container medium">
       <canvas id="teamChart"></canvas>
     </div>
@@ -300,15 +305,21 @@ function render() {
   });
 
   // Team chart
+  const showTotal = document.getElementById('teamTotalToggle').checked;
+  const teamsSorted = [...d.teams].sort((a, b) =>
+    showTotal ? b.totalDays - a.totalDays : b.avgDays - a.avgDays
+  );
+  document.getElementById('teamChartTitle').textContent =
+    showTotal ? 'PTO by Team (total days)' : 'PTO by Team (avg days / person)';
   if (teamChart) teamChart.destroy();
   teamChart = new Chart(document.getElementById('teamChart'), {
     type: 'bar',
     data: {
-      labels: d.teams.map(t => `${t.team} (${t.members})`),
+      labels: teamsSorted.map(t => `${t.team} (${t.members})`),
       datasets: [{
-        label: 'Avg Days/Person',
-        data: d.teams.map(t => t.avgDays),
-        backgroundColor: d.teams.map(t => TC[t.team] || '#58a6ff'),
+        label: showTotal ? 'Total Days' : 'Avg Days/Person',
+        data: teamsSorted.map(t => showTotal ? t.totalDays : t.avgDays),
+        backgroundColor: teamsSorted.map(t => TC[t.team] || '#58a6ff'),
         borderRadius: 4,
       }]
     },
@@ -321,14 +332,14 @@ function render() {
         tooltip: {
           callbacks: {
             label: (ctx) => {
-              const t = d.teams[ctx.dataIndex];
+              const t = teamsSorted[ctx.dataIndex];
               return `Avg: ${t.avgDays}d / Total: ${t.totalDays}d / ${t.members} people`;
             }
           }
         }
       },
       scales: {
-        x: { title: { display: true, text: 'Avg Days per Person' } },
+        x: { title: { display: true, text: showTotal ? 'Total Days' : 'Avg Days per Person' } },
         y: { grid: { display: false } }
       }
     }
@@ -419,6 +430,7 @@ DATA.years.slice().reverse().forEach(y => {
 
 select.addEventListener('change', render);
 formerToggle.addEventListener('change', render);
+document.getElementById('teamTotalToggle').addEventListener('change', render);
 render();
 </script>
 
