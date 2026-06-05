@@ -307,7 +307,7 @@ function render() {
             label: (ctx) => {
               const p = d.persons[ctx.dataIndex];
               if (ctx.datasetIndex === 1) return `Projected total: ${p.projected}d`;
-              return `${p.days}d (${p.team})`;
+              return `${p.days}d`;
             }
           }
         }
