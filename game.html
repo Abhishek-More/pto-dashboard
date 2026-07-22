@@ -24,7 +24,6 @@
   .badge { font-size:1.1rem; width:1.4rem; text-align:center; }
   .who { font-weight:600; flex:1; }
   .peek { font-size:.72rem; color:#8b949e; }
-  .days { font-variant-numeric:tabular-nums; font-weight:700; color:#58a6ff; }
   .sortable-ghost { opacity:.35; }
   .ctrl { display:flex; gap:.6rem; margin-top:1rem; }
   button { flex:1; background:#161b22; color:#e1e4e8; border:1px solid #30363d;
@@ -40,7 +39,7 @@
 </style></head><body>
 <div id="wrap">
   <h1>PTO Game</h1>
-  <p class="sub">Rank 5 mystery coworkers by PTO &middot; <a href="index.html">&larr; Dashboard</a></p>
+  <p class="sub">Rank 5 coworkers by PTO (real names, local only)</p>
   <p class="rule">Drag to rank by cumulative PTO taken. Tap a card to peek at their team. You get 4 guesses.</p>
   <div class="ends"><span>&#8593; Least PTO</span><span>Most PTO &#8595;</span></div>
   <ul id="list"></ul>
@@ -52,16 +51,16 @@
   <div id="msg"></div>
 </div>
 <script>
-const POOL = [{"n": "Person 57", "v": 28.6, "c": "#484f58", "t": "Former"}, {"n": "Person 44", "v": 18.0, "c": "#484f58", "t": "Former"}, {"n": "Person 11", "v": 13.2, "c": "#484f58", "t": "Former"}, {"n": "Person 17", "v": 41.5, "c": "#f0883e", "t": "Implementation"}, {"n": "Person 49", "v": 57.0, "c": "#484f58", "t": "Former"}, {"n": "Person 14", "v": 25.4, "c": "#484f58", "t": "Former"}, {"n": "Person 15", "v": 32.5, "c": "#58a6ff", "t": "Management"}, {"n": "Person 38", "v": 36.2, "c": "#f0883e", "t": "Implementation"}, {"n": "Person 9", "v": 56.5, "c": "#f778ba", "t": "Sales"}, {"n": "Person 35", "v": 37.7, "c": "#f778ba", "t": "Sales"}, {"n": "Person 42", "v": 8.8, "c": "#484f58", "t": "Former"}, {"n": "Person 13", "v": 0.2, "c": "#484f58", "t": "Former"}, {"n": "Person 27", "v": 56.4, "c": "#d2a8ff", "t": "Success"}, {"n": "Person 43", "v": 0.2, "c": "#484f58", "t": "Former"}, {"n": "Person 21", "v": 7.5, "c": "#484f58", "t": "Former"}, {"n": "Person 31", "v": 36.6, "c": "#484f58", "t": "Former"}, {"n": "Person 5", "v": 46.1, "c": "#f778ba", "t": "Sales"}, {"n": "Person 50", "v": 22.5, "c": "#484f58", "t": "Former"}, {"n": "Person 12", "v": 30.3, "c": "#484f58", "t": "Former"}, {"n": "Person 36", "v": 45.6, "c": "#484f58", "t": "Former"}, {"n": "Person 1", "v": 46.2, "c": "#f0883e", "t": "Implementation"}, {"n": "Person 28", "v": 10.6, "c": "#484f58", "t": "Former"}, {"n": "Person 60", "v": 43.2, "c": "#f778ba", "t": "Sales"}, {"n": "Person 52", "v": 22.0, "c": "#484f58", "t": "Former"}, {"n": "Person 18", "v": 26.0, "c": "#484f58", "t": "Former"}, {"n": "Person 59", "v": 50.4, "c": "#f0883e", "t": "Implementation"}, {"n": "Person 58", "v": 37.0, "c": "#238636", "t": "Product"}, {"n": "Person 24", "v": 6.5, "c": "#484f58", "t": "Former"}, {"n": "Person 29", "v": 30.5, "c": "#484f58", "t": "Former"}, {"n": "Person 8", "v": 11.4, "c": "#484f58", "t": "Former"}, {"n": "Person 26", "v": 60.8, "c": "#238636", "t": "Product"}, {"n": "Person 10", "v": 10.9, "c": "#484f58", "t": "Former"}, {"n": "Person 23", "v": 8.0, "c": "#484f58", "t": "Former"}, {"n": "Person 30", "v": 32.0, "c": "#484f58", "t": "Former"}, {"n": "Person 7", "v": 19.0, "c": "#484f58", "t": "Former"}, {"n": "Person 19", "v": 34.5, "c": "#f778ba", "t": "Sales"}, {"n": "Person 33", "v": 31.2, "c": "#bc8cff", "t": "Marketing"}, {"n": "Person 16", "v": 38.7, "c": "#d2a8ff", "t": "Success"}, {"n": "Person 54", "v": 3.5, "c": "#484f58", "t": "Former"}, {"n": "Person 40", "v": 7.0, "c": "#484f58", "t": "Former"}, {"n": "Person 4", "v": 25.6, "c": "#f778ba", "t": "Sales"}, {"n": "Person 20", "v": 8.0, "c": "#484f58", "t": "Former"}, {"n": "Person 22", "v": 32.6, "c": "#d2a8ff", "t": "Success"}, {"n": "Person 51", "v": 41.4, "c": "#d2a8ff", "t": "Success"}, {"n": "Person 46", "v": 30.8, "c": "#d2a8ff", "t": "Success"}, {"n": "Person 37", "v": 30.6, "c": "#d2a8ff", "t": "Success"}, {"n": "Person 47", "v": 24.5, "c": "#bc8cff", "t": "Marketing"}, {"n": "Person 41", "v": 14.1, "c": "#238636", "t": "Product"}, {"n": "Person 56", "v": 29.4, "c": "#484f58", "t": "Former"}, {"n": "Person 45", "v": 9.0, "c": "#484f58", "t": "Former"}, {"n": "Person 3", "v": 31.8, "c": "#484f58", "t": "Former"}, {"n": "Person 39", "v": 20.8, "c": "#238636", "t": "Product"}, {"n": "Person 6", "v": 6.2, "c": "#238636", "t": "Product"}, {"n": "Person 53", "v": 9.4, "c": "#484f58", "t": "Former"}, {"n": "Person 25", "v": 14.0, "c": "#d2a8ff", "t": "Success"}, {"n": "Person 2", "v": 0.1, "c": "#484f58", "t": "Former"}, {"n": "Person 48", "v": 7.0, "c": "#f778ba", "t": "Sales"}, {"n": "Person 55", "v": 9.9, "c": "#bc8cff", "t": "Marketing"}, {"n": "Person 32", "v": 1.0, "c": "#484f58", "t": "Former"}, {"n": "Person 34", "v": 1.0, "c": "#484f58", "t": "Former"}];           // [{n, v, c, t}]
+const POOL = [{"n": "Nicole Liebeler", "r": 28, "c": "#484f58", "t": "Former"}, {"n": "Alec Apter", "r": 19, "c": "#484f58", "t": "Former"}, {"n": "Avery Durrant", "r": 16, "c": "#484f58", "t": "Former"}, {"n": "Alec Becharas", "r": 46, "c": "#f0883e", "t": "Implementation"}, {"n": "Rachel Reyes", "r": 54, "c": "#484f58", "t": "Former"}, {"n": "Matthew He", "r": 25, "c": "#484f58", "t": "Former"}, {"n": "Jack Pawlik", "r": 37, "c": "#58a6ff", "t": "Management"}, {"n": "Mariana Koffend", "r": 40, "c": "#f0883e", "t": "Implementation"}, {"n": "Jonna O'Sullivan", "r": 53, "c": "#f778ba", "t": "Sales"}, {"n": "Niko Philosophos", "r": 43, "c": "#f778ba", "t": "Sales"}, {"n": "Meg Kim", "r": 9, "c": "#484f58", "t": "Former"}, {"n": "Jeremy Wall", "r": 1, "c": "#484f58", "t": "Former"}, {"n": "Abe Thomas", "r": 52, "c": "#d2a8ff", "t": "Success"}, {"n": "Stone Wang", "r": 1, "c": "#484f58", "t": "Former"}, {"n": "Iskender Akhmedov", "r": 7, "c": "#484f58", "t": "Former"}, {"n": "Derek Novosad", "r": 41, "c": "#484f58", "t": "Former"}, {"n": "Cole Farris", "r": 49, "c": "#f778ba", "t": "Sales"}, {"n": "Marisa Dell'Anno", "r": 23, "c": "#484f58", "t": "Former"}, {"n": "Katie Derrough", "r": 30, "c": "#484f58", "t": "Former"}, {"n": "Brandon Yu", "r": 48, "c": "#484f58", "t": "Former"}, {"n": "Kiana Talebi", "r": 50, "c": "#f0883e", "t": "Implementation"}, {"n": "Matthew Cao", "r": 13, "c": "#484f58", "t": "Former"}, {"n": "Lara Margolis", "r": 47, "c": "#f778ba", "t": "Sales"}, {"n": "Steven Wood", "r": 22, "c": "#484f58", "t": "Former"}, {"n": "Evan Duffy", "r": 27, "c": "#484f58", "t": "Former"}, {"n": "Angel Chen", "r": 51, "c": "#f0883e", "t": "Implementation"}, {"n": "Abhishek More", "r": 42, "c": "#238636", "t": "Product"}, {"n": "Fatima Fateh", "r": 5, "c": "#484f58", "t": "Former"}, {"n": "Grant Everett", "r": 31, "c": "#484f58", "t": "Former"}, {"n": "Vishnu Pathmanaban", "r": 15, "c": "#484f58", "t": "Former"}, {"n": "Gabrielle Bigalke", "r": 55, "c": "#238636", "t": "Product"}, {"n": "Elle Szabo", "r": 14, "c": "#484f58", "t": "Former"}, {"n": "Zach Rubin", "r": 8, "c": "#484f58", "t": "Former"}, {"n": "Ross Donnelly", "r": 36, "c": "#484f58", "t": "Former"}, {"n": "Sarah Yi", "r": 20, "c": "#484f58", "t": "Former"}, {"n": "Rachel Dardick", "r": 39, "c": "#f778ba", "t": "Sales"}, {"n": "Konstantin Suvorov", "r": 34, "c": "#bc8cff", "t": "Marketing"}, {"n": "Nisha Desai", "r": 44, "c": "#d2a8ff", "t": "Success"}, {"n": "Catherine Wang", "r": 3, "c": "#484f58", "t": "Former"}, {"n": "Sabrin Sultana", "r": 6, "c": "#484f58", "t": "Former"}, {"n": "Benjamin Visee", "r": 26, "c": "#f778ba", "t": "Sales"}, {"n": "Alex Scatena", "r": 8, "c": "#484f58", "t": "Former"}, {"n": "Ayden Wells", "r": 38, "c": "#d2a8ff", "t": "Success"}, {"n": "Ambikha Maharaj", "r": 45, "c": "#d2a8ff", "t": "Success"}, {"n": "Keyur Dhungana", "r": 33, "c": "#d2a8ff", "t": "Success"}, {"n": "Karla Gonzalez", "r": 32, "c": "#d2a8ff", "t": "Success"}, {"n": "Alexandra Romanoff", "r": 24, "c": "#bc8cff", "t": "Marketing"}, {"n": "Brian Keefe", "r": 18, "c": "#238636", "t": "Product"}, {"n": "Danielle", "r": 29, "c": "#484f58", "t": "Former"}, {"n": "Isaac", "r": 10, "c": "#484f58", "t": "Former"}, {"n": "Sam", "r": 35, "c": "#484f58", "t": "Former"}, {"n": "Jess Newman", "r": 21, "c": "#238636", "t": "Product"}, {"n": "Eric Yang", "r": 4, "c": "#238636", "t": "Product"}, {"n": "Atharva", "r": 11, "c": "#484f58", "t": "Former"}, {"n": "Leo Gordon", "r": 17, "c": "#d2a8ff", "t": "Success"}, {"n": "Gabe Maldonado", "r": 0, "c": "#484f58", "t": "Former"}, {"n": "Josh Ruddy", "r": 6, "c": "#f778ba", "t": "Sales"}, {"n": "Chris Melendez", "r": 12, "c": "#bc8cff", "t": "Marketing"}, {"n": "Isaac Bushong", "r": 2, "c": "#484f58", "t": "Former"}, {"n": "Henry Fisher", "r": 2, "c": "#484f58", "t": "Former"}];           // [{n, r, c, t}]  r = ordering rank (no amounts)
 const listEl = document.getElementById('list');
 const msgEl = document.getElementById('msg');
-let correctVals, guesses, lockedEl, sortable;
+let correctRanks, guesses, lockedEl, sortable;
 
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
 
 function newGame(){
   const pick = shuffle([...POOL]).slice(0,5);
-  correctVals = pick.map(x=>x.v).sort((a,b)=>a-b);
+  correctRanks = pick.map(x=>x.r).sort((a,b)=>a-b);
   guesses = 4; lockedEl = Array(5).fill(null);
   msgEl.textContent = '';
   document.getElementById('submit').disabled = false;
@@ -70,9 +69,9 @@ function newGame(){
     const li = document.createElement('li');
     li.className = 'item';
     li.style.borderLeftColor = p.c;
-    li.dataset.v = p.v; li.dataset.t = p.t;
+    li.dataset.r = p.r; li.dataset.t = p.t;
     li.innerHTML = `<span class="badge">&#9776;</span><span class="who">${p.n}</span>`+
-                   `<span class="peek"></span><span class="days"></span>`;
+                   `<span class="peek"></span>`;
     li.addEventListener('click', ()=>{
       const pk = li.querySelector('.peek');
       pk.textContent = pk.textContent ? '' : p.t;
@@ -101,22 +100,19 @@ function renderGuesses(){
 
 function submit(){
   const rows = [...listEl.children];
-  let newlyLocked = 0;
   rows.forEach((li,i)=>{
-    const badge = li.querySelector('.badge');
     if(li.classList.contains('locked')) return;
-    if(Number(li.dataset.v) === correctVals[i]){
+    const badge = li.querySelector('.badge');
+    if(Number(li.dataset.r) === correctRanks[i]){
       li.classList.add('locked');
       badge.textContent = '\u2713';
       lockedEl[i] = li;
-      newlyLocked++;
     } else {
       badge.textContent = '\uD83C\uDF34';   // palm tree
     }
   });
   enforce();
-  const won = lockedEl.every(Boolean);
-  if(won){ finish(true); return; }
+  if(lockedEl.every(Boolean)){ finish(true); return; }
   guesses--;
   renderGuesses();
   if(guesses===0) finish(false);
@@ -124,13 +120,15 @@ function submit(){
 
 function finish(won){
   document.getElementById('submit').disabled = true;
-  [...listEl.children].forEach(li=>{
-    li.querySelector('.days').textContent = Number(li.dataset.v).toFixed(1)+'d';
-    if(!li.classList.contains('locked')) li.querySelector('.badge').textContent = '\uD83C\uDF34';
-  });
+  if(!won){
+    // reveal the correct order (no amounts, just ranking)
+    const rows = [...listEl.children].sort((a,b)=>Number(a.dataset.r)-Number(b.dataset.r));
+    rows.forEach(r=>{ listEl.appendChild(r); r.classList.add('locked');
+                      r.querySelector('.badge').textContent = '\u2713'; });
+  }
   if(sortable) sortable.option('disabled', true);
   msgEl.style.color = won ? '#2ea043' : '#f85149';
-  msgEl.textContent = won ? 'Nailed the order! \uD83C\uDF89' : 'Out of guesses. Here are the totals.';
+  msgEl.textContent = won ? 'Nailed the order! \uD83C\uDF89' : "Out of guesses \u2014 here's the ranking.";
 }
 
 document.getElementById('newgame').onclick = newGame;
