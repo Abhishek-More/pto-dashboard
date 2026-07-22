@@ -41,7 +41,7 @@
   <h1>PTO Game</h1>
   <p class="sub">Rank 5 coworkers by PTO (real names, local only)</p>
   <p class="rule">Drag to rank by cumulative PTO taken. Tap a card to peek at their team. You get 4 guesses.</p>
-  <div class="ends"><span>&#8593; Least PTO</span><span>Most PTO &#8595;</span></div>
+  <div class="ends"><span>&#8593; Most PTO</span><span>Least PTO &#8595;</span></div>
   <ul id="list"></ul>
   <div class="guesses" id="guesses"></div>
   <div class="ctrl">
@@ -60,7 +60,7 @@ function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0
 
 function newGame(){
   const pick = shuffle([...POOL]).slice(0,5);
-  correctRanks = pick.map(x=>x.r).sort((a,b)=>a-b);
+  correctRanks = pick.map(x=>x.r).sort((a,b)=>b-a);
   guesses = 4; lockedEl = Array(5).fill(null);
   msgEl.textContent = '';
   document.getElementById('submit').disabled = false;
@@ -122,7 +122,7 @@ function finish(won){
   document.getElementById('submit').disabled = true;
   if(!won){
     // reveal the correct order (no amounts, just ranking)
-    const rows = [...listEl.children].sort((a,b)=>Number(a.dataset.r)-Number(b.dataset.r));
+    const rows = [...listEl.children].sort((a,b)=>Number(b.dataset.r)-Number(a.dataset.r));
     rows.forEach(r=>{ listEl.appendChild(r); r.classList.add('locked');
                       r.querySelector('.badge').textContent = '\u2713'; });
   }
